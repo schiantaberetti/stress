@@ -1,0 +1,23 @@
+TRANSACTION = CONNECTION GET-ACTION GET-ACTION 
+
+CONNECTION = connection-request gen-response
+GET-ACTION = get-request gen-response 
+
+gen-response = <%BTrfcomm_read%> "+OK" CRLF 
+get-request = <%BTrfcomm_send%> get-req-pkt 
+connection-request = <%BTrfcomm_send%> conn-req-pkt
+
+;-----------------------Connection Request Packet
+conn-req-pkt = conn-req-opcode conn-req-length obex-ver conn-req-flags max-accepted-size 
+conn-req-opcode = %x80 
+conn-req-length = %x0007 ;if too long the answer will never come
+obex-ver = %x10
+conn-req-flags = %x00 
+max-accepted-size = %x2000 ; 8K
+
+;------------------------GET Request Packet
+; bombing data: 83 00 17 01 00 03 42 00 10 74 65 78 74 2f 78 2d 76 43 61 72 64 00 00 
+get-req-pkt = get-opcode get-pkt-length magic-seven
+get-opcode = %x83
+get-pkt-length = %x0004 
+magic-seven = %x07 

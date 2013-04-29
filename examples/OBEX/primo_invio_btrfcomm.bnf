@@ -1,0 +1,18 @@
+; stress -a examples/primo_invio_btrfcomm.bnf -d E8:E5:D6:FE:6C:F9 -p 7 -M -t 15000 -o outputfile
+CONNECTION = connection-request connection-response
+connection-request = <%BTrfcomm_send%> conn-req-pkt
+connection-response = <%BTrfcomm_read%> "+OK" CRLF 
+
+;-----------------------Connection Request Packet
+conn-req-pkt = conn-req-opcode conn-req-length obex-ver conn-req-flags max-accepted-size
+conn-req-opcode = %x80 
+conn-req-length = %x0007
+obex-ver = %x10 
+conn-req-flags = %x00 
+max-accepted-size = %x2000 ; 8K
+
+;------------------------------Anomalies
+;byte-anomaly = %x00 / %xff /%xa5
+;hex-anomaly = hex-long-data / hex-short-data
+;hex-long-data = 50%x10 ; 50 bytes of x01
+;hex-short-data = "" / %x10 ; 0 or 1 byte equals to 16

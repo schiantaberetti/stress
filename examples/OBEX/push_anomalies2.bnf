@@ -1,0 +1,82 @@
+TRANSACTION = CONNECTION GET-ACTION PUT-ACTION DISCONNECTION
+
+CONNECTION = connection-request gen-response
+PUT-ACTION = put-init-request gen-response put-final-request gen-response
+GET-ACTION = get-request gen-response
+DISCONNECTION = disconnection-request gen-response
+
+connection-request = <%BTrfcomm_send%> conn-req-pkt
+gen-response = <%BTrfcomm_read%> "+OK" CRLF 
+
+put-init-request = <%BTrfcomm_send%> put-init-req-pkt
+put-final-request = <%BTrfcomm_send%> put-final-req-pkt
+
+get-request = <%BTrfcomm_send%> get-req-pkt
+
+disconnection-request = <%BTrfcomm_send%> disconn-req-pkt
+
+;------------------------GET Request Packet
+get-req-pkt = get-opcode get-pkt-length empty-name-header vcard-type-header
+get-opcode = %x83
+get-pkt-length = %x0016
+empty-name-header = %x010003
+vcard-type-header = %x420010 "text/x-vCard" %x00 ; 16 bytes
+
+;-----------------------Disconnection Request Packet
+disconn-req-pkt = disconn-req-opcode disconn-req-length disconn-opt-headers
+disconn-req-opcode = %x81 
+disconn-req-length = %x0008
+disconn-opt-headers = id-header
+
+;-----------------------Connection Request Packet
+conn-req-pkt = conn-req-opcode conn-req-length obex-ver conn-req-flags max-accepted-size conn-opt-headers
+conn-req-opcode = %x80 
+conn-req-length = %x001f ;if too long the answer will never come
+obex-ver = %x10
+conn-req-flags = %x00 
+max-accepted-size = %x2000 ; 8K
+conn-opt-headers = user-header count-header
+
+;-------------------------PUT First Request Packet
+put-init-req-pkt = put-init-req-opcode put-init-req-length put-init-headers 
+put-init-req-opcode = %x02
+put-init-req-length = %x0022
+put-init-headers = name-header length-header body-header
+
+;-------------------------PUT Final Request Packet
+put-final-req-pkt = put-final-req-opcode put-final-req-length put-final-headers 
+put-final-req-opcode = %x82
+put-final-req-length = %x000e
+put-final-headers = end-of-body-header
+
+;------------------------------Headers
+body-header = %x48 body-length body-data  ;11 bytes
+body-length = %x000b
+body-data = 8%x10
+
+end-of-body-header = %x48 eob-length eob-data  ;11 bytes
+eob-length = %x000b
+eob-data = 8%x10
+
+id-header = %xcb conn-identifier
+conn-identifier = %x00000001
+
+count-header = %xc0 conn-objs-number ; 5 bytes
+conn-objs-number = %x00000001
+
+length-header = %xc3 conn-objs-bytes ;5 bytes
+conn-objs-bytes = %x00000010
+
+user-header = %x70 user-header-length user-header-content ; 19 bytes
+user-header-length = %x0013
+user-header-content = 16%x01
+
+name-header = %x01 name-length filename   ; 15 bytes
+name-length = %x000f ; 3+filename length 
+filename = %x00 "B" %x00 "." %x00 "t" %x00 "x" %x00 "t" %x0000 ; 12 bytes
+
+;------------------------------Anomalies
+;byte-anomaly = %x00 / %xff /%xa5
+;hex-anomaly = hex-long-data / hex-short-data
+;hex-long-data = 50%x10 ; 50 bytes of x01
+;hex-short-data = "" / %x10 ; 0 or 1 byte equals to 16

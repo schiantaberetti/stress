@@ -1,0 +1,35 @@
+TRANSACTION = CONNECTION PUT-ACTION DISCONNECTION
+
+CONNECTION = connection-request gen-response
+DISCONNECTION = disconnection-request gen-response
+PUT-ACTION = put-request gen-response 
+
+gen-response = <%BTrfcomm_read%> "+OK" CRLF 
+put-request = <%BTrfcomm_send%> put-req-pkt 
+connection-request = <%BTrfcomm_send%> conn-req-pkt
+disconnection-request = <%BTrfcomm_send%> disconn-req-pkt
+
+;-----------------------Disconnection Request Packet
+disconn-req-pkt = disconn-req-opcode disconn-req-length 
+disconn-req-opcode = %x81 
+disconn-req-length = %x0003
+
+;-----------------------Connection Request Packet
+conn-req-pkt = conn-req-opcode conn-req-length obex-ver conn-req-flags max-accepted-size 
+conn-req-opcode = %x80 
+conn-req-length = %x0007 ;if too long the answer will never come
+obex-ver = %x10
+conn-req-flags = %x00 
+max-accepted-size = %x2000 ; 8K
+
+;------------------------PUT Request Packet
+put-req-pkt = %x82 put-pkt-length put-headers
+put-pkt-length = %x000f
+put-headers = name-header length-header 
+
+length-header = %xc3 conn-objs-bytes ;5 bytes
+conn-objs-bytes = %x90000000
+
+name-header = %x01 name-header-length filename; 7 bytes
+name-header-length = %x0007
+filename = %x00740000

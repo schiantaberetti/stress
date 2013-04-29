@@ -1,0 +1,9 @@
+TRANSACTION = CONNECTION GET-ACTION DISCONNECTION
+CONNECTION = conn-pkt gen-response
+GET-ACTION = get-pkt gen-response
+DISCONNECTION = disconn-pkt gen-response
+
+disconn-pkt = <%BTrfcomm_send%> %x810003 
+get-pkt = <%BTrfcomm_send%> %x830016010003420010 "text/x-vCard" %x00
+conn-pkt = <%BTrfcomm_send%> %x80000710000007; 2%x00
+gen-response = <%BTrfcomm_read%> "+OK" CRLF
